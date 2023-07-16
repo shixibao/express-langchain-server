@@ -1,12 +1,12 @@
 import path from 'path'
 import fs from 'fs'
 
-import { LLMChain } from 'langchain/chains'
+import { LLMChain, ConversationChain } from 'langchain/chains'
 import { PromptTemplate } from 'langchain/prompts'
 import { OpenAI } from 'langchain/llms/openai'
+import { BufferMemory, ConversationSummaryMemory } from 'langchain/memory'
 
 import { DirectoryLoader } from 'langchain/document_loaders/fs/directory'
-import { JSONLoader } from 'langchain/document_loaders/fs/json'
 import { CSVLoader } from 'langchain/document_loaders/fs/csv'
 import { TextLoader } from 'langchain/document_loaders/fs/text'
 
@@ -14,12 +14,12 @@ import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import { HNSWLib } from 'langchain/vectorstores/hnswlib'
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai'
 
-import { PROMPT_TEMPLATE, ZHICHENG_CHAT_PROMPT_TEMPLATE } from './prompt.mjs'
+import { PROMPT_TEMPLATE, ZHICHENG_CHAT_PROMPT_TEMPLATE, QUESTION_PROMPT_TEMPLATE } from './prompt.mjs'
 
 const CWD_PATH = process.cwd()
 
 const DATA_PATH = path.join(CWD_PATH, 'static/raw/zhicheng')
-console.log(DATA_PATH)
+
 const VENCTOR_DATA_PATH = path.join(CWD_PATH, 'static/data_venctor/zhicheng')
 
 const getFileName = (path) => {
@@ -65,14 +65,19 @@ const initVectorStore = async rawDocs => {
   return vectorStore
 }
 
+const model = new OpenAI({ temperature: 0, maxTokens: -1 })
+
+// const memory = new BufferMemory({ inputKey: "question", returnMessages: true, memoryKey: 'history' })
+const memory2 = new ConversationSummaryMemory({ inputKey: "question", memoryKey: 'history', llm: model })
+
 const _generateChain = () => {
-  const model = new OpenAI({ temperature: 0, maxTokens: -1 })
   const prompt = PromptTemplate.fromTemplate(
     ZHICHENG_CHAT_PROMPT_TEMPLATE
   )
-  return new LLMChain({
+  return new ConversationChain({
     llm: model,
-    prompt
+    prompt,
+    memory: memory2
   })
 }
 

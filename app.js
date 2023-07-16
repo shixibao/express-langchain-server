@@ -26,7 +26,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/user', usersRouter);
 app.use('/zhicheng', zhichengRouter);
 app.use('/google', googleRouter)
 app.use('/suggent', suggestRouter)
